@@ -10,6 +10,10 @@
 #include "tensorflow/core/kernels/conv_ops_sycl_common.h"
 #include "tensorflow/core/kernels/depthwise_conv_op.h"
 
+#ifdef TENSORFLOW_USE_SYCL
+#include "tensorflow/core/common_runtime/sycl/sycl_util.h"
+#endif  // TENSORFLOW_USE_SYCL
+
 namespace tensorflow {
 typedef Eigen::SyclDevice SYCLDevice;
 namespace sycl_conv {
@@ -478,7 +482,7 @@ struct LaunchDepthwiseConv2DKernel<T, ConvType::FilterBackprop> {
                      T const* const input, T const* const filter,
                      DepthwiseConv2DParams const& params) noexcept {
     const size_t output_size = get_output_size<CType>(params);
-    const Index max_wg_size = device.maxSyclThreadsPerBlock();
+    const Index max_wg_size = get_max_work_item_tuple(device)[0];
     const Index pow2_max_wg_size = pow2_less_than(max_wg_size);
     Index pow2_batch = pow2_less_than(params.batch_);
     Index pow2_out_cols = pow2_less_than(params.out_cols_);
